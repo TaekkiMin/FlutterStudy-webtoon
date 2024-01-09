@@ -3,6 +3,8 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:webtoon/models/home_model.dart';
+import 'package:webtoon/models/webtoon_detail_model.dart';
+import 'package:webtoon/models/webtoon_episode_model.dart';
 
 class ApiService {
   final String baseUrl =
@@ -27,6 +29,35 @@ class ApiService {
             webtoon)); // WebtoonModel.fromJson() 생성자 함수를 통해 webtoon을 보내 title, thumb, id를 초기화
       }
       return webtoonInstance;
+    }
+    throw Error();
+  }
+
+  // static으로 선언하면 baseUrl을 가져올 수 없음
+  // 에피소드 api는 객체만 있기 때문에 위에 처럼 배열 선언해서 할 필요 없음
+  Future<WebtoonDeatailModel> getToonById(String id) async {
+    final url = Uri.parse('$baseUrl/$id');
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      final webtoon = jsonDecode(response.body);
+      return WebtoonDeatailModel.fromJson(webtoon);
+    }
+    throw Error();
+  }
+
+  Future<List<WebtoonEpisodeModel>> getLatestEpisoidesById(String id) async {
+    List<WebtoonEpisodeModel> episodeInstance = [];
+    final url = Uri.parse('$baseUrl/$id/episodes');
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      final episodes =
+          jsonDecode(response.body); // 여러 개의 웹툰 정보 객체를 담은 배열을 episode에 저장
+      for (var episode in episodes) {
+        episodeInstance.add(
+          WebtoonEpisodeModel.fromJson(episode),
+        ); // 여기서 episode는 하나의 웹툰 정보(하나의 객체)
+      }
+      return episodeInstance;
     }
     throw Error();
   }
