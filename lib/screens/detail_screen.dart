@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:webtoon/models/webtoon_detail_model.dart';
 import 'package:webtoon/models/webtoon_episode_model.dart';
 import 'package:webtoon/services/api_service.dart';
+import 'package:webtoon/widgets/episode_widget.dart';
 
 class DetailScreen extends StatefulWidget {
   final String title, thumb, id;
@@ -134,35 +135,13 @@ class _DetailScreenState extends State<DetailScreen> {
                       // list 개수가 정해져있을 시 Column 사용
                       children: [
                         for (var episode in snapshot.data!)
-                          Container(
-                            // 버튼 사이의 margin 설정
-                            margin: const EdgeInsets.only(
-                              bottom: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                              color: Colors.green.shade400,
-                            ),
-                            // 버튼 안에 텍스트와 아이콘에 대한 padding 설정
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 10,
-                            ),
-                            child: Row(
-                              // 텍스트와 아이콘에 대한 spacebetween으로 설정
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  episode.title,
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                  ),
-                                ),
-                                const Icon(
-                                  Icons.chevron_right_outlined,
-                                ),
-                              ],
-                            ),
+
+                          // 에피소드 회차 버튼을 다른 클래스로 분리
+                          Episode(
+                            // WebtoonEpisodeDetail 클래스에 있는 에피소드 정보들을 부름
+                            episode: episode,
+                            // DetailScreen의 ID를 뜻하는데 사용자가 클릭한 webtoon들을 부름
+                            webtoonId: widget.id,
                           ),
                       ],
                     );
