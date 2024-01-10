@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webtoon/models/webtoon_detail_model.dart';
 import 'package:webtoon/models/webtoon_episode_model.dart';
 import 'package:webtoon/services/api_service.dart';
@@ -21,12 +22,50 @@ class DetailScreen extends StatefulWidget {
 class _DetailScreenState extends State<DetailScreen> {
   late Future<WebtoonDeatailModel> webtoon;
   late Future<List<WebtoonEpisodeModel>> episode;
+  late SharedPreferences prefs;
+  bool isLiked = false;
+
+  // 애플리케이션을 처음 실행시켰을 때 likedToons 리스트가 사용자의 저장소에 있는지 없는지 확인하는 함수
+  Future initPrefs() async {
+    prefs = await SharedPreferences.getInstance();
+    final likedToons = prefs.getStringList('likedToons');
+    // 저장소에 리스트 likedToons가 있다면 웹툰 아이디가 있는지 확인
+    if (likedToons != null) {
+      // 있으면 isliked를 true로 설정(좋아요)
+      if (likedToons.contains(widget.id) == true) {
+        setState(() {
+          isLiked = true;
+        });
+      }
+    }
+    // 없으면 likedToons 리스트 생성
+    else {
+      await prefs.setStringList('likedToons', []);
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     webtoon = ApiService().getToonById(widget.id);
     episode = ApiService().getLatestEpisoidesById(widget.id);
+    initPrefs();
+  }
+
+  // likedToons 리스트를 확인해 있을 때 좋아요일 경우 웹툰 id 삭제하고 좋아요가 아닐 경우 웹툰 id 추가해서 리스트를 저장소에 저장
+  onHeartTap() async {
+    final likedToons = prefs.getStringList('likedToons');
+    if (likedToons != null) {
+      if (isLiked) {
+        likedToons.remove(widget.id);
+      } else {
+        likedToons.add(widget.id);
+      }
+      await prefs.setStringList('likedToons', likedToons);
+      setState(() {
+        isLiked = !isLiked;
+      });
+    }
   }
 
   @override
@@ -37,6 +76,14 @@ class _DetailScreenState extends State<DetailScreen> {
         shadowColor: Colors.black, // 그림자 색깔 설정ㅇ
         backgroundColor: Colors.white,
         foregroundColor: Colors.green,
+        actions: [
+          IconButton(
+            onPressed: onHeartTap,
+            icon: isLiked
+                ? const Icon(Icons.favorite_outline_outlined)
+                : const Icon(Icons.favorite_rounded),
+          )
+        ],
         title: Text(
           widget.title,
           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
